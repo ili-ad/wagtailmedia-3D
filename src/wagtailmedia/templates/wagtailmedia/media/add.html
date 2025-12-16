@@ -34,7 +34,8 @@
 {% endblock %}
 
 {% block content %}
-    {% with add_str=media_type_def.add_button_label|default:_("Add audio or video") %}
+    {% trans "Add audio or video" as add_audio_or_video %}
+    {% with add_str=media_type_def.add_button_label|default:add_audio_or_video %}
         {% include "wagtailadmin/shared/header.html" with title=add_str icon="media" %}
     {% endwith %}
 
