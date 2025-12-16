@@ -45,8 +45,8 @@ def get_media_types() -> tuple[MediaTypeDef, ...]:
 
 
 def get_index_media_types() -> tuple[MediaTypeDef, ...]:
-    # Keep index actions limited to audio/video until the dedicated UI ticket
-    return tuple(mt for mt in MEDIA_TYPES if mt.slug in ("audio", "video"))
+    # Kept for backwards compatibility; index now surfaces all media types.
+    return get_media_types()
 
 
 def get_media_type(slug: str) -> MediaTypeDef:

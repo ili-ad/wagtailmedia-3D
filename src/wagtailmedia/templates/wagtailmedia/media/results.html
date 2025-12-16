@@ -21,14 +21,28 @@
 
          {% search_other %}
     {% else %}
-        {% with first_media_type=media_types.0 second_media_type=media_types.1 %}
-            {% url 'wagtailmedia:add' first_media_type.slug as wagtailmedia_add_first_url %}
-            {% url 'wagtailmedia:add' second_media_type.slug as wagtailmedia_add_second_url %}
-            {% if current_collection %}
-                <p>{% blocktrans with first_url=wagtailmedia_add_first_url second_url=wagtailmedia_add_second_url first_label=first_media_type.slug second_label=second_media_type.slug %}You haven't uploaded any media files in this collection. You can upload <a href="{{ first_url }}">{{ first_label }}</a> or <a href="{{ second_url }}">{{ second_label }}</a> files.{% endblocktrans %}</p>
-            {% else %}
-                <p>{% blocktrans with first_url=wagtailmedia_add_first_url second_url=wagtailmedia_add_second_url first_label=first_media_type.slug second_label=second_media_type.slug %}You haven't uploaded any media files. You can upload <a href="{{ first_url }}">{{ first_label }}</a> or <a href="{{ second_url }}">{{ second_label }}</a> files.{% endblocktrans %}</p>
-            {% endif %}
-        {% endwith %}
+        {% url 'wagtailmedia:add' 'audio' as wagtailmedia_add_audio_url %}
+        {% url 'wagtailmedia:add' 'video' as wagtailmedia_add_video_url %}
+        {% url 'wagtailmedia:add' 'model3d' as wagtailmedia_add_model3d_url %}
+
+        {% if current_collection %}
+          <p>
+            {% blocktrans %}
+              You haven't uploaded any media files in this collection. You can upload
+              <a href="{{ wagtailmedia_add_audio_url }}">audio</a>,
+              <a href="{{ wagtailmedia_add_video_url }}">video</a>,
+              or <a href="{{ wagtailmedia_add_model3d_url }}">3D model</a> files.
+            {% endblocktrans %}
+          </p>
+        {% else %}
+          <p>
+            {% blocktrans %}
+              You haven't uploaded any media files. You can upload
+              <a href="{{ wagtailmedia_add_audio_url }}">audio</a>,
+              <a href="{{ wagtailmedia_add_video_url }}">video</a>,
+              or <a href="{{ wagtailmedia_add_model3d_url }}">3D model</a> files.
+            {% endblocktrans %}
+          </p>
+        {% endif %}
     {% endif %}
 {% endif %}
