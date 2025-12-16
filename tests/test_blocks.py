@@ -6,6 +6,7 @@ from wagtailmedia.blocks import (
     AbstractMediaChooserBlock,
     AudioChooserBlock,
     MediaChooserBlockComparison,
+    Model3DChooserBlock,
     VideoChooserBlock,
 )
 from wagtailmedia.models import Media
@@ -26,6 +27,13 @@ class BlockTests(TestCase):
             duration=1024,
             file=ContentFile("Test", name="test.mp4"),
             type="video",
+        )
+
+        cls.model3d = Media.objects.create(
+            title="Test 3D model",
+            duration=0,
+            file=ContentFile("Test", name="test.glb"),
+            type="model3d",
         )
 
     def test_abstract_render_raises_not_implemented_error(self):
@@ -110,6 +118,25 @@ class BlockTests(TestCase):
         # will return an empty value if trying to render with the wrong media type
         self.assertEqual(block.render(self.audio), "")
 
+    def test_model3d_chooser_block_type(self):
+        block = Model3DChooserBlock()
+        self.assertEqual(block.media_type, "model3d")
+
+    def test_model3d_chooser_block_field_queryset(self):
+        block = Model3DChooserBlock()
+        self.assertQuerySetEqual(
+            block.field.queryset.order_by("pk"),
+            Media.objects.filter(type="model3d").order_by("pk"),
+        )
+
+    def test_model3d_chooser_block_rendering(self):
+        block = Model3DChooserBlock()
+        rendered = block.render(self.model3d)
+        self.assertTrue(rendered)
+        self.assertIn(self.model3d.file.url, rendered)
+        self.assertNotIn("<audio", rendered)
+        self.assertNotIn("<video", rendered)
+
     def test_comparison_class(self):
         self.assertIs(
             AbstractMediaChooserBlock().get_comparison_class(),
@@ -120,4 +147,7 @@ class BlockTests(TestCase):
         )
         self.assertIs(
             VideoChooserBlock().get_comparison_class(), MediaChooserBlockComparison
+        )
+        self.assertIs(
+            Model3DChooserBlock().get_comparison_class(), MediaChooserBlockComparison
         )

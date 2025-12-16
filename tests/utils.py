@@ -36,7 +36,14 @@ def create_media(
     thumbnail: Optional[str] = False,
 ) -> Media:
     filename = re.sub(r"[/:\"\'] ", "_", title).lower()
-    extension = "mp3" if media_type == MediaType.AUDIO else "mp4"
+    if media_type == MediaType.AUDIO:
+        extension = "mp3"
+    elif media_type == MediaType.VIDEO:
+        extension = "mp4"
+    elif media_type == MediaType.MODEL3D:
+        extension = "glb"
+    else:
+        extension = "bin"
     item = Media.objects.create(
         type=media_type,
         title=title,
@@ -60,4 +67,10 @@ def create_video(title="Test video", duration=100, thumbnail=None) -> Media:
 def create_audio(title="Test audio", duration=100, thumbnail=None) -> Media:
     return create_media(
         MediaType.AUDIO, title=title, duration=duration, thumbnail=thumbnail
+    )
+
+
+def create_model3d(title="Test 3D model", duration=0, thumbnail=None) -> Media:
+    return create_media(
+        MediaType.MODEL3D, title=title, duration=duration, thumbnail=thumbnail
     )

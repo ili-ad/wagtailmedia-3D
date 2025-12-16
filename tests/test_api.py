@@ -6,7 +6,7 @@ from wagtail import VERSION as WAGTAIL_VERSION
 
 from wagtailmedia.models import get_media_model
 
-from .utils import create_audio, create_video
+from .utils import create_audio, create_model3d, create_video
 
 
 Media = get_media_model()
@@ -19,6 +19,7 @@ class ApiTestBase(TestCase):
             cls.a_space_odyssey = create_video("2001: A Space Odyssey")
             cls.tng = create_video("Star Trek: The Next Generation")
             cls.pink_floyd_time = create_audio("Pink Floyd: Time")
+            cls.glb = create_model3d("GLB Example")
 
     def tearDown(self) -> None:
         for item in Media.objects.all():
@@ -256,6 +257,11 @@ class TestApiMediaListing(ApiTestBase):
         content = json.loads(response.content.decode("UTF-8"))
         item_id_list = self.get_media_id_list(content)
         self.assertEqual(item_id_list, [self.pink_floyd_time.pk])
+
+        response = self.get_response(type="model3d")
+        content = json.loads(response.content.decode("UTF-8"))
+        item_id_list = self.get_media_id_list(content)
+        self.assertEqual(item_id_list, [self.glb.pk])
 
     def test_ordering_by_title(self):
         response = self.get_response(order="title")
