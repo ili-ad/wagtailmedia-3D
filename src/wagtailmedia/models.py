@@ -22,6 +22,7 @@ ALLOWED_EXTENSIONS_THUMBNAIL = ["gif", "jpg", "jpeg", "png", "webp"]
 class MediaType(models.TextChoices):
     AUDIO = "audio", _("Audio file")
     VIDEO = "video", _("Video file")
+    MODEL3D = "model3d", _("3D model")
 
 
 class MediaQuerySet(SearchableQuerySetMixin, models.QuerySet):
@@ -144,11 +145,15 @@ class AbstractMedia(CollectionMember, index.Indexed, models.Model):
             validate = FileExtensionValidator(ALLOWED_EXTENSIONS_THUMBNAIL)
             validate(self.thumbnail)
 
-        if self.type == "audio" and wagtailmedia_settings.AUDIO_EXTENSIONS:
-            validate = FileExtensionValidator(wagtailmedia_settings.AUDIO_EXTENSIONS)
-            validate(self.file)
-        elif self.type == "video" and wagtailmedia_settings.VIDEO_EXTENSIONS:
-            validate = FileExtensionValidator(wagtailmedia_settings.VIDEO_EXTENSIONS)
+        validation_map = {
+            MediaType.AUDIO: wagtailmedia_settings.AUDIO_EXTENSIONS,
+            MediaType.VIDEO: wagtailmedia_settings.VIDEO_EXTENSIONS,
+            MediaType.MODEL3D: wagtailmedia_settings.MODEL3D_EXTENSIONS,
+        }
+
+        extensions = validation_map.get(self.type)
+        if self.file and extensions:
+            validate = FileExtensionValidator(extensions)
             validate(self.file)
 
     class Meta:
