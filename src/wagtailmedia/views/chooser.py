@@ -10,12 +10,49 @@ from wagtail.models import Collection
 from wagtail.search.backends import get_search_backends
 
 from wagtailmedia.forms import get_media_form
+from wagtailmedia.media_types import get_media_type, get_media_type_slugs, get_media_types
 from wagtailmedia.models import get_media_model
 from wagtailmedia.permissions import permission_policy
 from wagtailmedia.utils import paginate
 
 
 permission_checker = PermissionPolicyChecker(permission_policy)
+
+
+def _make_upload_forms(Media, MediaForm, user, *, limit_to=None, bound_form=None, bound_slug=None):
+    upload_forms = {}
+
+    for media_type_def in get_media_types():
+        if limit_to and media_type_def.slug not in limit_to:
+            continue
+
+        if bound_slug and media_type_def.slug == bound_slug and bound_form is not None:
+            form = bound_form
+        else:
+            media = Media(uploaded_by_user=user, type=media_type_def.slug)
+            form = MediaForm(
+                user=user, prefix="media-chooser-upload", instance=media
+            )
+        upload_forms[media_type_def.slug] = form
+
+    return upload_forms
+
+
+def _make_upload_form_tabs(upload_forms):
+    upload_form_tabs = []
+
+    for media_type_def in get_media_types():
+        if media_type_def.slug in upload_forms:
+            upload_form_tabs.append(
+                {
+                    "slug": media_type_def.slug,
+                    "tab_id": f"upload-{media_type_def.slug}",
+                    "label": media_type_def.upload_tab_label,
+                    "errors_count": len(upload_forms[media_type_def.slug].errors),
+                }
+            )
+
+    return upload_form_tabs
 
 
 def get_media_json(media):
@@ -53,22 +90,15 @@ def chooser(request, media_type=None):
 
     if permission_policy.user_has_permission(request.user, "add"):
         MediaForm = get_media_form(Media)
-        media_audio = Media(uploaded_by_user=request.user, type="audio")
-        media_video = Media(uploaded_by_user=request.user, type="video")
-
-        uploadforms = {
-            "audio": MediaForm(
-                user=request.user, prefix="media-chooser-upload", instance=media_audio
-            ),
-            "video": MediaForm(
-                user=request.user, prefix="media-chooser-upload", instance=media_video
-            ),
-        }
-
-        if media_type:
-            uploadforms = {media_type: uploadforms[media_type]}
+        limit_to = {media_type} if media_type else None
+        uploadforms = _make_upload_forms(
+            Media, MediaForm, request.user, limit_to=limit_to
+        )
     else:
         uploadforms = {}
+
+    uploadform_tabs = _make_upload_form_tabs(uploadforms)
+    first_uploadform = next(iter(uploadforms.values()), None)
 
     if media_type:
         media_files = media_files.filter(type=media_type)
@@ -129,10 +159,8 @@ def chooser(request, media_type=None):
         media_files = media_files.order_by(ordering)
         paginator, media_files = paginate(request, media_files)
 
-    if media_type == "audio":
-        title = _("Choose audio")
-    elif media_type == "video":
-        title = _("Choose video")
+    if media_type in get_media_type_slugs():
+        title = get_media_type(media_type).choose_title
     else:
         title = _("Choose a media item")
 
@@ -145,6 +173,8 @@ def chooser(request, media_type=None):
             "searchform": searchform,
             "collections": collections,
             "uploadforms": uploadforms,
+            "uploadform_tabs": uploadform_tabs,
+            "first_uploadform": first_uploadform,
             "is_searching": False,
             "popular_tags": popular_tags_for_model(Media),
             "media_type": media_type,
@@ -180,6 +210,8 @@ def media_chosen(request, media_id):
 @permission_checker.require("add")
 def chooser_upload(request, media_type):
     upload_forms = {}
+    uploadform_tabs = []
+    first_uploadform = None
 
     if (
         permission_policy.user_has_permission(request.user, "add")
@@ -210,19 +242,15 @@ def chooser_upload(request, media_type):
                 None,
                 json_data={"step": "media_chosen", "result": get_media_json(media)},
             )
-
-        if media_type == "audio":
-            video = Media(uploaded_by_user=request.user, type="video")
-            video_form = MediaForm(
-                instance=video, user=request.user, prefix="media-chooser-upload"
-            )
-            upload_forms = {"audio": uploading_form, "video": video_form}
-        else:
-            audio = Media(uploaded_by_user=request.user, type="audio")
-            audio_form = MediaForm(
-                instance=audio, user=request.user, prefix="media-chooser-upload"
-            )
-            upload_forms = {"audio": audio_form, "video": uploading_form}
+        upload_forms = _make_upload_forms(
+            Media,
+            MediaForm,
+            request.user,
+            bound_form=uploading_form,
+            bound_slug=media_type,
+        )
+        uploadform_tabs = _make_upload_form_tabs(upload_forms)
+        first_uploadform = next(iter(upload_forms.values()), None)
 
     ordering = get_ordering(request)
 
@@ -243,14 +271,26 @@ def chooser_upload(request, media_type):
     media_files = media_files.order_by(ordering)
     paginator, media_files = paginate(request, media_files)
 
+    chooser_url = reverse("wagtailmedia:chooser_typed", args=(media_type,))
+
+    if media_type in get_media_type_slugs():
+        title = get_media_type(media_type).choose_title
+    else:
+        title = _("Choose a media item")
+
     context = {
         "media_files": media_files,
         "searchform": searchform,
         "collections": collections,
         "uploadforms": upload_forms,
+        "uploadform_tabs": uploadform_tabs,
+        "first_uploadform": first_uploadform,
         "is_searching": False,
         "media_type": media_type,
         "ordering": ordering,
+        "chooser_url": chooser_url,
+        "title": title,
+        "icon": f"wagtailmedia-{media_type}",
     }
     return render_modal_workflow(
         request,

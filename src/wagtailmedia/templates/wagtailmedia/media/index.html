@@ -9,8 +9,9 @@
     {% if user_can_add %}
         {% fragment as media_actions %}
             {% block add_actions %}
-                <a href="{% url 'wagtailmedia:add' 'audio' %}" class="button button--icon bicolor">{% icon name="plus" wrapped=1 %}{% trans "Add audio" %}</a>
-                <a class="button button--icon bicolor" href="{% url 'wagtailmedia:add' 'video' %}">{% icon name="plus" wrapped=1 %}{% trans "Add video" %}</a>
+                {% for media_type in media_types %}
+                    <a href="{% url 'wagtailmedia:add' media_type.slug %}" class="button button--icon bicolor">{% icon name="plus" wrapped=1 %}{{ media_type.add_button_label }}</a>
+                {% endfor %}
             {% endblock %}
         {% endfragment %}
 

@@ -12,6 +12,7 @@ from wagtail.admin.models import popular_tags_for_model
 from wagtail.models import Collection, Page
 from wagtail.search.backends import get_search_backends
 
+from wagtailmedia.media_types import get_media_type, get_media_type_slugs, get_media_types
 from wagtailmedia.forms import get_media_form
 from wagtailmedia.models import get_media_model
 from wagtailmedia.permissions import permission_policy
@@ -85,6 +86,7 @@ def index(request):
                 "query_string": query_string,
                 "is_searching": bool(query_string),
                 "collections": collections,
+                "media_types": get_media_types(),
             },
         )
     else:
@@ -104,6 +106,7 @@ def index(request):
                 ),
                 "collections": collections,
                 "current_collection": current_collection,
+                "media_types": get_media_types(),
             },
         )
 
@@ -141,12 +144,17 @@ def add(request, media_type):
         media = Media(uploaded_by_user=request.user, type=media_type)
         form = MediaForm(user=request.user, instance=media)
 
+    media_type_def = None
+    if media_type in get_media_type_slugs():
+        media_type_def = get_media_type(media_type)
+
     return render(
         request,
         "wagtailmedia/media/add.html",
         {
             "form": form,
             "media_type": media_type,
+            "media_type_def": media_type_def,
         },
     )
 
