@@ -70,8 +70,14 @@ WAGTAILMEDIA = {
         "ogv",
         "webm",
     ],  # list of extensions
+    "MODEL3D_EXTENSIONS": [
+        "glb",
+        "gltf",
+    ],  # list of extensions for 3D models
 }
 ```
+
+Admin UI support for choosing and uploading `model3d` items will be added in a follow-up ticket.
 
 ### URL configuration
 

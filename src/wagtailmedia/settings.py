@@ -19,6 +19,7 @@ DEFAULTS = {
     "MEDIA_MODEL": "wagtailmedia.Media",
     "MEDIA_FORM_BASE": "",
     "AUDIO_EXTENSIONS": ["aac", "aiff", "flac", "m4a", "m4b", "mp3", "ogg", "wav"],
+    "MODEL3D_EXTENSIONS": ["glb", "gltf"],
     "VIDEO_EXTENSIONS": [
         "avi",
         "h264",
