@@ -1,10 +1,8 @@
 {% extends "wagtailadmin/base.html" %}
 {% load i18n wagtailadmin_tags %}
 {% block titletag %}
-    {% if media_type == 'audio' %}
-        {% trans "Add audio" %}
-    {% elif media_type == 'video' %}
-        {% trans "Add video" %}
+    {% if media_type_def %}
+        {{ media_type_def.add_button_label }}
     {% else %}
         {% trans "Add audio or video" %}
     {% endif %}
@@ -36,14 +34,9 @@
 {% endblock %}
 
 {% block content %}
-    {% if media_type == 'audio' %}
-        {% trans "Add audio" as add_str %}
-    {% elif media_type == 'video' %}
-        {% trans "Add video" as add_str %}
-    {% else %}
-        {% trans "Add audio or video" as add_str %}
-    {% endif %}
-    {% include "wagtailadmin/shared/header.html" with title=add_str icon="media" %}
+    {% with add_str=media_type_def.add_button_label|default:_("Add audio or video") %}
+        {% include "wagtailadmin/shared/header.html" with title=add_str icon="media" %}
+    {% endwith %}
 
     <div class="nice-padding">
         {% include "wagtailadmin/shared/non_field_errors.html" %}

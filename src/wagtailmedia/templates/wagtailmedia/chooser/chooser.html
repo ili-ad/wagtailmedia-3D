@@ -6,13 +6,9 @@
      data-controller="w-tabs" data-w-tabs-active-class="animate-in"
      data-tabs data-tabs-animate data-tabs-disable-url data-wm-tabs>
     {% if uploadforms %}
-        {# Both auth and video forms are powered by the same media form, so use one of them #}
-        {% if uploadforms.video %}
-            {{ uploadforms.video.media.js }}
-            {{ uploadforms.video.media.css }}
-        {% else %}
-            {{ uploadforms.audio.media.js }}
-            {{ uploadforms.audio.media.css }}
+        {% if first_uploadform %}
+            {{ first_uploadform.media.js }}
+            {{ first_uploadform.media.css }}
         {% endif %}
 
         <div class="w-tabs__wrapper w-overflow-hidden">
@@ -23,22 +19,13 @@
             >
                 {% trans "Search" as search_text %}
                 {% include 'wagtailadmin/shared/tabs/tab_nav_link.html' with tab_id='search' title=search_text %}
-                {% if uploadforms.audio %}
-                    {% trans "Upload Audio" as upload_audio_text %}
-                    {% if uploadforms.audio.errors and media_type == 'audio' %}
-                        {% include 'wagtailadmin/shared/tabs/tab_nav_link.html' with tab_id='upload-audio' title=upload_audio_text errors_count=uploadforms.audio.errors|length %}
+                {% for tab in uploadform_tabs %}
+                    {% if tab.errors_count and media_type == tab.slug %}
+                        {% include 'wagtailadmin/shared/tabs/tab_nav_link.html' with tab_id=tab.tab_id title=tab.label errors_count=tab.errors_count %}
                     {% else %}
-                        {% include 'wagtailadmin/shared/tabs/tab_nav_link.html' with tab_id='upload-audio' title=upload_audio_text %}
+                        {% include 'wagtailadmin/shared/tabs/tab_nav_link.html' with tab_id=tab.tab_id title=tab.label %}
                     {% endif %}
-                {% endif %}
-                {% if uploadforms.video %}
-                    {% trans "Upload Video" as upload_video_text %}
-                    {% if uploadforms.video.errors and media_type == 'video' %}
-                        {% include 'wagtailadmin/shared/tabs/tab_nav_link.html' with tab_id='upload-video' title=upload_video_text errors_count=uploadforms.video.errors|length %}
-                    {% else %}
-                        {% include 'wagtailadmin/shared/tabs/tab_nav_link.html' with tab_id='upload-video' title=upload_video_text %}
-                    {% endif %}
-                {% endif %}
+                {% endfor %}
             </div>
         </div>
     {% endif %}

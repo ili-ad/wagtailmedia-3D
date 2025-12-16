@@ -1,20 +1,26 @@
 from django.urls import path, re_path
 
+from wagtailmedia.media_types import get_media_type_slugs_regex
 from wagtailmedia.views import chooser, media
+
+
+MEDIA_TYPE_RE = get_media_type_slugs_regex()
 
 
 urlpatterns = [
     path("", media.index, name="index"),
-    re_path(r"^(?P<media_type>audio|video|media)/add/$", media.add, name="add"),
+    re_path(rf"^(?P<media_type>{MEDIA_TYPE_RE}|media)/add/$", media.add, name="add"),
     path("edit/<int:media_id>/", media.edit, name="edit"),
     path("delete/<int:media_id>/", media.delete, name="delete"),
     path("chooser/", chooser.chooser, name="chooser"),
     re_path(
-        r"chooser/(?P<media_type>audio|video)/", chooser.chooser, name="chooser_typed"
+        rf"chooser/(?P<media_type>{MEDIA_TYPE_RE})/",
+        chooser.chooser,
+        name="chooser_typed",
     ),
     path("chooser/<int:media_id>/", chooser.media_chosen, name="media_chosen"),
     re_path(
-        r"^(?P<media_type>audio|video)/chooser/upload/$",
+        rf"^(?P<media_type>{MEDIA_TYPE_RE})/chooser/upload/$",
         chooser.chooser_upload,
         name="chooser_upload",
     ),
