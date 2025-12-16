@@ -29,6 +29,12 @@ MEDIA_TYPES: tuple[MediaTypeDef, ...] = (
         upload_tab_label=_("Upload Video"),
         add_button_label=_("Add video"),
     ),
+    MediaTypeDef(
+        slug="model3d",
+        choose_title=_("Choose 3D model"),
+        upload_tab_label=_("Upload 3D model"),
+        add_button_label=_("Add 3D model"),
+    ),
 )
 
 MEDIA_TYPE_BY_SLUG: Mapping[str, MediaTypeDef] = {mt.slug: mt for mt in MEDIA_TYPES}
@@ -36,6 +42,11 @@ MEDIA_TYPE_BY_SLUG: Mapping[str, MediaTypeDef] = {mt.slug: mt for mt in MEDIA_TY
 
 def get_media_types() -> tuple[MediaTypeDef, ...]:
     return MEDIA_TYPES
+
+
+def get_index_media_types() -> tuple[MediaTypeDef, ...]:
+    # Keep index actions limited to audio/video until the dedicated UI ticket
+    return tuple(mt for mt in MEDIA_TYPES if mt.slug in ("audio", "video"))
 
 
 def get_media_type(slug: str) -> MediaTypeDef:
