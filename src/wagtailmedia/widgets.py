@@ -70,6 +70,14 @@ class AdminVideoChooser(AdminMediaChooser):
     link_to_chosen_text = _("Edit this video")
 
 
+class AdminModel3DChooser(AdminMediaChooser):
+    media_type = "model3d"
+    icon = "wagtailmedia-model3d"
+    choose_one_text = _("Choose a 3D model")
+    choose_another_text = _("Choose another 3D model")
+    link_to_chosen_text = _("Edit this 3D model")
+
+
 class MediaChooserAdapter(BaseChooserAdapter):
     js_constructor = "wagtailmedia.MediaChooser"
 
@@ -85,3 +93,4 @@ class MediaChooserAdapter(BaseChooserAdapter):
 register(MediaChooserAdapter(), AdminMediaChooser)
 register(MediaChooserAdapter(), AdminAudioChooser)
 register(MediaChooserAdapter(), AdminVideoChooser)
+register(MediaChooserAdapter(), AdminModel3DChooser)

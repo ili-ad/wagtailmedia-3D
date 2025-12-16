@@ -180,9 +180,7 @@ def chooser(request, media_type=None):
             "media_type": media_type,
             "ordering": ordering,
             "title": title,
-            "icon": "media"
-            if media_type == "model3d"
-            else (f"wagtailmedia-{media_type}" if media_type is not None else "media"),
+            "icon": f"wagtailmedia-{media_type}" if media_type is not None else "media",
             "chooser_url": chooser_url,
             "elided_page_range": paginator.get_elided_page_range(
                 request.GET.get("p", 1)
@@ -292,7 +290,7 @@ def chooser_upload(request, media_type):
         "ordering": ordering,
         "chooser_url": chooser_url,
         "title": title,
-        "icon": "media" if media_type == "model3d" else f"wagtailmedia-{media_type}",
+        "icon": f"wagtailmedia-{media_type}",
     }
     return render_modal_workflow(
         request,

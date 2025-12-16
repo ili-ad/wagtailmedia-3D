@@ -135,4 +135,5 @@ def register_icons(icons):
     return icons + [
         "wagtailmedia/icons/wagtailmedia-audio.svg",  # {% icon "wagtailmedia-audio" %}
         "wagtailmedia/icons/wagtailmedia-video.svg",  # {% icon "wagtailmedia-video" %}
+        "wagtailmedia/icons/wagtailmedia-model3d.svg",  # {% icon "wagtailmedia-model3d" %}
     ]
