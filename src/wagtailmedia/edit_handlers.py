@@ -7,8 +7,13 @@ from wagtail.admin.compare import ForeignObjectComparison
 from wagtail.admin.panels import FieldPanel
 
 from .models import MediaType
-from .utils import format_audio_html, format_video_html
-from .widgets import AdminAudioChooser, AdminMediaChooser, AdminVideoChooser
+from .utils import format_audio_html, format_model3d_html, format_video_html
+from .widgets import (
+    AdminAudioChooser,
+    AdminMediaChooser,
+    AdminModel3DChooser,
+    AdminVideoChooser,
+)
 
 
 if TYPE_CHECKING:
@@ -34,6 +39,8 @@ class MediaChooserPanel(FieldPanel):
             return AdminAudioChooser
         elif self.media_type == "video":
             return AdminVideoChooser
+        elif self.media_type == "model3d":
+            return AdminModel3DChooser
         return AdminMediaChooser
 
     def get_form_options(self) -> dict:
@@ -64,5 +71,7 @@ class MediaFieldComparison(ForeignObjectComparison):
     def render_media_item(item: AbstractMedia) -> str:
         if item.type == MediaType.AUDIO:
             return format_audio_html(item)
+        elif item.type == MediaType.MODEL3D:
+            return format_model3d_html(item)
         else:
             return format_video_html(item)

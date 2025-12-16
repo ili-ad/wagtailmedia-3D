@@ -6,11 +6,11 @@ from django.utils.functional import cached_property
 from wagtail.admin.compare import BlockComparison
 from wagtail.blocks import ChooserBlock
 
-from .utils import format_audio_html, format_video_html
+from .utils import format_audio_html, format_model3d_html, format_video_html
 
 
 if TYPE_CHECKING:
-    from .widgets import AdminAudioChooser, AdminVideoChooser
+    from .widgets import AdminAudioChooser, AdminModel3DChooser, AdminVideoChooser
 
 
 class AbstractMediaChooserBlock(ChooserBlock):
@@ -132,3 +132,32 @@ class VideoChooserBlock(AbstractMediaChooserBlock):
 
     class Meta:
         icon = "wagtailmedia-video"
+
+
+class Model3DChooserBlock(AbstractMediaChooserBlock):
+    def __init__(self, required=True, help_text=None, validators=(), **kwargs):
+        super().__init__(
+            required=required,
+            help_text=help_text,
+            validators=validators,
+            media_type="model3d",
+            **kwargs,
+        )
+
+    @cached_property
+    def widget(self) -> "AdminModel3DChooser":
+        from wagtailmedia.widgets import AdminModel3DChooser
+
+        return AdminModel3DChooser()
+
+    def render_basic(self, value, context=None) -> str:
+        if not value:
+            return ""
+
+        if value.type != self.media_type:
+            return ""
+
+        return format_model3d_html(value)
+
+    class Meta:
+        icon = "wagtailmedia-model3d"

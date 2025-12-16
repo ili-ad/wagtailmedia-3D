@@ -48,3 +48,11 @@ def format_video_html(item: AbstractMedia) -> str:
         ),
         fallback=_("Your browser does not support the video element."),
     )
+
+
+def format_model3d_html(item: AbstractMedia) -> str:
+    return format_html(
+        '<a href="{href}" download>{filename}</a>',
+        href=item.url,
+        filename=item.filename,
+    )
