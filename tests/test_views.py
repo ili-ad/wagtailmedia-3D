@@ -13,6 +13,7 @@ from wagtail.models import Collection, GroupCollectionPermission
 from wagtail.test.utils import WagtailTestUtils
 
 from wagtailmedia import models
+from wagtailmedia.media_types import get_media_types
 
 
 class TestMediaIndexView(TestCase, WagtailTestUtils):
@@ -23,16 +24,16 @@ class TestMediaIndexView(TestCase, WagtailTestUtils):
         response = self.client.get(reverse("wagtailmedia:index"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "wagtailmedia/media/index.html")
-        self.assertContains(response, "Add audio")
-        self.assertContains(response, "Add video")
+        for media_type in get_media_types():
+            self.assertContains(response, str(media_type.add_button_label))
 
     @modify_settings(INSTALLED_APPS={"prepend": "tests.testextends"})
     def test_extends(self):
         response = self.client.get(reverse("wagtailmedia:index"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "wagtailmedia/media/index.html")
-        self.assertNotContains(response, "Add audio")
-        self.assertNotContains(response, "Add video")
+        for media_type in get_media_types():
+            self.assertNotContains(response, str(media_type.add_button_label))
         self.assertContains(response, "You shan't act")
 
     def test_search(self):
@@ -142,7 +143,7 @@ class TestMediaAddView(TestCase, WagtailTestUtils):
         # is displayed on the form
         self.assertNotContains(response, self.collection_label_tag)
         self.assertContains(response, "Add audio")
-        self.assertNotContains(response, "Add audio or video")
+        self.assertNotContains(response, "Add audio, video, or 3D model")
         self.assertContains(
             response,
             '<form action="{}" method="POST" enctype="multipart/form-data" novalidate>'.format(
@@ -156,7 +157,7 @@ class TestMediaAddView(TestCase, WagtailTestUtils):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "wagtailmedia/media/add.html")
         self.assertContains(response, "Add video")
-        self.assertNotContains(response, "Add audio or video")
+        self.assertNotContains(response, "Add audio, video, or 3D model")
         self.assertContains(
             response,
             '<form action="{}" method="POST" enctype="multipart/form-data" novalidate>'.format(
@@ -177,8 +178,10 @@ class TestMediaAddView(TestCase, WagtailTestUtils):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "wagtailmedia/media/add.html")
 
-        self.assertNotContains(response, "Add video")
-        self.assertContains(response, "Add audio or video")
+        self.assertContains(response, "Add audio, video, or 3D model")
+        self.assertContains(response, reverse("wagtailmedia:add", args=("audio",)))
+        self.assertContains(response, reverse("wagtailmedia:add", args=("video",)))
+        self.assertContains(response, reverse("wagtailmedia:add", args=("model3d",)))
 
     def test_get_audio_with_collections(self):
         root_collection = Collection.get_first_root_node()
@@ -775,6 +778,14 @@ class TestTypedMediaChooserView(TestCase, WagtailTestUtils):
         )
         video.save()
 
+        model3d = models.Media(
+            title="Test 3D model",
+            duration=0,
+            file=ContentFile("A 3D model", name="model.glb"),
+            type="model3d",
+        )
+        model3d.save()
+
     def setUp(self):
         self.user = self.login()
 
@@ -807,6 +818,9 @@ class TestTypedMediaChooserView(TestCase, WagtailTestUtils):
             "Test video",
             'href="#tab-upload-video"',
             "Upload Video",
+            "Test 3D model",
+            'href="#tab-upload-model3d"',
+            "Upload 3D model",
         ]:
             self.assertNotIn(unexpected, html)
 
@@ -828,6 +842,33 @@ class TestTypedMediaChooserView(TestCase, WagtailTestUtils):
             "Test audio",
             'href="#tab-upload-audio"',
             "Upload Audio",
+            "Test 3D model",
+            'href="#tab-upload-model3d"',
+            "Upload 3D model",
+        ]:
+            self.assertNotIn(unexpected, html)
+
+    def test_model3d_chooser(self):
+        response = self.client.get(
+            reverse("wagtailmedia:chooser_typed", args=("model3d",))
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/json")
+        html = response.json().get("html")
+        for expected in [
+            "Test 3D model",
+            'href="#tab-upload-model3d"',
+            "Upload 3D model",
+        ]:
+            self.assertIn(expected, html)
+
+        for unexpected in [
+            "Test audio",
+            'href="#tab-upload-audio"',
+            "Upload Audio",
+            "Test video",
+            'href="#tab-upload-video"',
+            "Upload Video",
         ]:
             self.assertNotIn(unexpected, html)
 
@@ -997,6 +1038,26 @@ class TestMediaChooserUploadView(TestCase, WagtailTestUtils):
         self.assertEqual(media.duration, 100)
         self.assertEqual(media.width, 640)
         self.assertEqual(media.height, 480)
+
+    def test_upload_model3d(self):
+        response = self.client.post(
+            reverse("wagtailmedia:chooser_upload", args=("model3d",)),
+            {
+                "media-chooser-upload-title": "Test 3D model",
+                "media-chooser-upload-file": ContentFile(
+                    "A 3D model", name="model.glb"
+                ),
+                "media-chooser-upload-duration": "0",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        media_files = models.Media.objects.filter(title="Test 3D model")
+        self.assertEqual(media_files.count(), 1)
+
+        media = media_files.first()
+        self.assertEqual(media.type, "model3d")
 
     def test_upload_no_file_selected(self):
         response = self.client.post(

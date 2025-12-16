@@ -7,9 +7,14 @@ from wagtail.admin.panels import FieldPanel, ObjectList
 from wagtail.models import Page
 
 from wagtailmedia.edit_handlers import MediaChooserPanel, MediaFieldComparison
-from wagtailmedia.widgets import AdminAudioChooser, AdminMediaChooser, AdminVideoChooser
+from wagtailmedia.widgets import (
+    AdminAudioChooser,
+    AdminMediaChooser,
+    AdminModel3DChooser,
+    AdminVideoChooser,
+)
 
-from .utils import create_audio, create_video
+from .utils import create_audio, create_model3d, create_video
 
 
 class MediaChooserPanelTest(TestCase):
@@ -22,6 +27,7 @@ class MediaChooserPanelTest(TestCase):
 
         cls.audio = create_audio("Test audio", duration=1000)
         cls.video = create_video("Test video", duration=1024)
+        cls.model3d = create_model3d("Test 3D model")
 
         # a MediaChooserPanel class that works on BlogStreamPage's 'video' field
         cls.edit_handler = ObjectList([MediaChooserPanel("featured_media")])
@@ -46,16 +52,17 @@ class MediaChooserPanelTest(TestCase):
             instance=cls.test_instance, form=cls.form
         )
 
-    def _init_edit_handler(self, media_type=None):
+    def _init_edit_handler(self, media_type=None, instance=None):
+        instance = instance or self.test_instance
         my_page_object_list = ObjectList(
             [MediaChooserPanel("featured_media", media_type=media_type)]
         )
         my_page_object_list = my_page_object_list.bind_to_model(BlogStreamPage)
 
         my_media_chooser_panel = my_page_object_list.children[0]
-        form = my_page_object_list.get_form_class()(instance=self.test_instance)
+        form = my_page_object_list.get_form_class()(instance=instance)
         media_chooser_panel = my_media_chooser_panel.get_bound_panel(
-            instance=self.test_instance, form=form, request=self.request
+            instance=instance, form=form, request=self.request
         )
 
         return form, media_chooser_panel
@@ -70,6 +77,7 @@ class MediaChooserPanelTest(TestCase):
         for media_type, widget_class in {
             "audio": AdminAudioChooser,
             "video": AdminVideoChooser,
+            "model3d": AdminModel3DChooser,
         }.items():
             with self.subTest(msg=f"Testing widget overrides with {media_type}"):
                 panel = MediaChooserPanel("fake_media_field", media_type=media_type)
@@ -85,6 +93,11 @@ class MediaChooserPanelTest(TestCase):
 
         form, media_chooser_panel = self._init_edit_handler(media_type="video")
         self.assertEqual(type(form.fields["featured_media"].widget), AdminVideoChooser)
+
+        form, media_chooser_panel = self._init_edit_handler(media_type="model3d")
+        self.assertEqual(
+            type(form.fields["featured_media"].widget), AdminModel3DChooser
+        )
 
     def test_render_js_init(self):
         self.assertIn(
@@ -159,6 +172,25 @@ class MediaChooserPanelTest(TestCase):
                 result,
             )
         self.assertIn("Choose video", result)
+
+    def test_render_as_field_with_media_type_model3d(self):
+        model3d_page = BlogStreamPage(
+            title="Model post",
+            slug="model-post",
+            author="Jane Doe",
+            date="1984-01-02",
+            featured_media=self.model3d,
+        )
+        Page.objects.first().add_child(instance=model3d_page)
+
+        form, media_chooser_panel = self._init_edit_handler(
+            media_type="model3d", instance=model3d_page
+        )
+        result = media_chooser_panel.render_html()
+
+        chooser_url = reverse("wagtailmedia:chooser_typed", args=("model3d",))
+        self.assertIn(f'data-chooser-url="{chooser_url}"', result)
+        self.assertIn("Choose a 3D model", result)
 
     def test_render_as_empty_field(self):
         test_instance = BlogStreamPage()

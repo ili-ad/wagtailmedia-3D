@@ -2,7 +2,12 @@ from django.test import TestCase
 from django.urls import reverse
 
 from wagtailmedia import widgets
-from wagtailmedia.widgets import AdminAudioChooser, AdminMediaChooser, AdminVideoChooser
+from wagtailmedia.widgets import (
+    AdminAudioChooser,
+    AdminMediaChooser,
+    AdminModel3DChooser,
+    AdminVideoChooser,
+)
 
 from .utils import create_video
 
@@ -44,17 +49,23 @@ class AdminMediaChooserTest(TestCase):
         self.assertEqual(chooser.choose_another_text, "Choose another media item")
         self.assertEqual(chooser.link_to_chosen_text, "Edit this media item")
 
-    def text_audio_chooser_text(self):
-        chooser = AdminAudioChooser(media_type="audio")
+    def test_audio_chooser_text(self):
+        chooser = AdminAudioChooser()
         self.assertEqual(chooser.choose_one_text, "Choose audio")
         self.assertEqual(chooser.choose_another_text, "Choose another audio item")
         self.assertEqual(chooser.link_to_chosen_text, "Edit this audio item")
 
-    def text_video_chooser_text(self):
-        chooser = AdminVideoChooser(media_type="video")
+    def test_video_chooser_text(self):
+        chooser = AdminVideoChooser()
         self.assertEqual(chooser.choose_one_text, "Choose video")
         self.assertEqual(chooser.choose_another_text, "Choose another video")
         self.assertEqual(chooser.link_to_chosen_text, "Edit this video")
+
+    def test_model3d_chooser_text(self):
+        chooser = AdminModel3DChooser()
+        self.assertEqual(chooser.choose_one_text, "Choose a 3D model")
+        self.assertEqual(chooser.choose_another_text, "Choose another 3D model")
+        self.assertEqual(chooser.link_to_chosen_text, "Edit this 3D model")
 
     def test_render_html_uses_the_generic_chooser_url_by_default(self):
         chooser = AdminMediaChooser()
@@ -67,4 +78,11 @@ class AdminMediaChooserTest(TestCase):
         self.assertEqual(
             chooser.get_chooser_modal_url(),
             reverse("wagtailmedia:chooser_typed", args=("audio",)),
+        )
+
+    def test_render_html_uses_typed_chooser_url_for_model3d(self):
+        chooser = AdminModel3DChooser()
+        self.assertEqual(
+            chooser.get_chooser_modal_url(),
+            reverse("wagtailmedia:chooser_typed", args=("model3d",)),
         )

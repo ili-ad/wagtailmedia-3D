@@ -7,7 +7,7 @@
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/torchbox/wagtailmedia/main.svg)](https://results.pre-commit.ci/latest/github/torchbox/wagtailmedia/main)
 
 A module for Wagtail that provides functionality similar to `wagtail.documents` module,
-but for audio and video files.
+but for audio, video, and 3D model files.
 
 ## Requirements
 
@@ -77,7 +77,7 @@ WAGTAILMEDIA = {
 }
 ```
 
-Admin UI support for choosing and uploading `model3d` items will be added in a follow-up ticket.
+`model3d` items are available throughout the admin UI, including chooser tabs and upload forms.
 
 ### URL configuration
 
@@ -187,8 +187,13 @@ class BlogPageWithMedia(Page):
 ```
 
 The `MediaChooserPanel` accepts the `media_type` keyword argument (kwarg) to limit the types of media that can be chosen or uploaded.
-At the moment only "audio" (`MediaChooserPanel(media_type="audio")`) and "video" (`MediaChooserPanel(media_type="audio")`) are supported,
-and any other type will make the chooser behave as if it did not get any kwarg.
+Supported values are:
+
+- `"audio"` (for example, `MediaChooserPanel(media_type="audio")`)
+- `"video"` (for example, `MediaChooserPanel(media_type="video")`)
+- `"model3d"` (for example, `MediaChooserPanel(media_type="model3d")`)
+
+Any other value will make the chooser behave as if no `media_type` were specified.
 
 #### Name clash with Wagtail
 
@@ -268,13 +273,13 @@ class BlogPage(Page):
     ]
 ```
 
-You can also use audio or video-specific choosers:
+You can also use media-type-specific choosers:
 
 ```python
 # ...
 from wagtail.models import Page
 from wagtail.fields import StreamField
-from wagtailmedia.blocks import AudioChooserBlock, VideoChooserBlock
+from wagtailmedia.blocks import AudioChooserBlock, Model3DChooserBlock, VideoChooserBlock
 
 
 class BlogPage(Page):
@@ -285,6 +290,7 @@ class BlogPage(Page):
             # ... other block definitions
             ("audio", AudioChooserBlock()),
             ("video", VideoChooserBlock()),
+            ("model3d", Model3DChooserBlock()),
         ]
     )
 ```

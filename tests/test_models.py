@@ -156,7 +156,7 @@ class TestMediaQuerySet(TestCase):
             Media._meta.get_field(field_name).editable = True
 
     def test_form_init_with_non_editable_field(self):
-        for media_type in ("audio", "video"):
+        for media_type in ("audio", "video", "model3d"):
             for field_name in ("width", "height", "thumbnail"):
                 self._test_form_init_with_non_editable_field(media_type, field_name)
 
@@ -325,6 +325,20 @@ class TestMediaValidateExtensions(TestCase):
             self.media.full_clean()
         except ValidationError:
             self.fail("Validation error is raised even when valid file name is passed")
+
+    def test_create_model3d_with_invalid_extension(self):
+        self.media = self._create("test.mp4", type="model3d")
+        with self.assertRaises(ValidationError):
+            self.media.full_clean()
+
+    def test_create_model3d_with_valid_extension(self):
+        self.media = self._create("test.glb", type="model3d")
+        self.media.full_clean()
+
+    @override_settings(WAGTAILMEDIA={"MODEL3D_EXTENSIONS": ["mp4"]})
+    def test_create_model3d_with_custom_extension(self):
+        self.media = self._create("test.mp4", type="model3d")
+        self.media.full_clean()
 
     def tearDown(self):
         self.media.delete()
